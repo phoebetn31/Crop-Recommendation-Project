@@ -11,6 +11,8 @@ app = FastAPI(
     version="1.0"
 )
 
+prediction_history = []
+
 # Load model
 model = joblib.load("models/crop_model.pkl")
 label_encoder = joblib.load("models/label_encoder.pkl")
@@ -36,6 +38,24 @@ def home():
 def health():
     return {"status": "OK"}
 
+# Model Information
+@app.get("/model-info")
+def model_info():
+    return {
+        "model_name": "Random Forest",
+        "version": "1.0",
+        "algorithm": "RandomForestClassifier",
+        "features": [
+            "N",
+            "P",
+            "K",
+            "temperature",
+            "humidity",
+            "ph",
+            "rainfall"
+        ]
+    }
+
 # Predict - Phần chính, phần dự đoán
 @app.post("/predict")
 def predict(data: CropInput):
@@ -50,7 +70,32 @@ def predict(data: CropInput):
         "rainfall": data.rainfall
     }])
 
-    prediction = model.predict(input_data)
-    crop = label_encoder.inverse_transform(prediction)
+    # Chuẩn hóa dữ liệu
+    input_scaled = scaler.transform(input_data)
 
-    return {"prediction": crop[0]}
+    # Dự đoán
+    prediction = model.predict(input_scaled)
+
+    # Xác suất dự đoán
+    probability = model.predict_proba(input_scaled)
+
+    crop = label_encoder.inverse_transform(prediction)[0]
+
+    confidence = float(probability.max())
+
+    # Lưu lịch sử
+    prediction_history.append({
+        "input": data.dict(),
+        "prediction": crop,
+        "confidence": round(confidence, 4)
+    })
+
+    return {
+        "prediction": crop,
+        "confidence": round(confidence, 4)
+    }
+
+# Prediction History
+@app.get("/history")
+def history(limit: int = 10):
+    return prediction_history[-limit:]
