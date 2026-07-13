@@ -1,8 +1,11 @@
 #thêm các thư viện cần thiết
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile, File
 from pydantic import BaseModel
 import pandas as pd
 import joblib
+import sqlite3
+from io import StringIO
+import numpy as np  
 
 #tạo một app API
 app = FastAPI(
@@ -17,6 +20,12 @@ prediction_history = []
 model = joblib.load("models/crop_model.pkl")
 label_encoder = joblib.load("models/label_encoder.pkl")
 scaler = joblib.load("models/scaler.pkl")
+
+# Kết nối SQLite
+def get_connection():
+    conn = sqlite3.connect("database/crop_prediction.db")
+    conn.row_factory = sqlite3.Row
+    return conn
 
 # Input Schema
 class CropInput(BaseModel):
@@ -83,19 +92,83 @@ def predict(data: CropInput):
 
     confidence = float(probability.max())
 
-    # Lưu lịch sử
-    prediction_history.append({
-        "input": data.dict(),
-        "prediction": crop,
-        "confidence": round(confidence, 4)
-    })
+    # Lưu vào SQLite
+    conn = get_connection()
+
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    INSERT INTO prediction_history
+    (
+        N,
+        P,
+        K,
+        temperature,
+        humidity,
+        ph,
+        rainfall,
+        prediction,
+        confidence
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """,
+    (
+        data.N,
+        data.P,
+        data.K,
+        data.temperature,
+        data.humidity,
+        data.ph,
+        data.rainfall,
+        crop,
+        confidence
+    ))
+
+    conn.commit()
+    conn.close()
 
     return {
         "prediction": crop,
         "confidence": round(confidence, 4)
     }
 
-# Prediction History
 @app.get("/history")
 def history(limit: int = 10):
-    return prediction_history[-limit:]
+
+    conn = get_connection()
+
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    SELECT *
+    FROM prediction_history
+    ORDER BY id DESC
+    LIMIT ?
+    """, (limit,))
+
+    rows = cursor.fetchall()
+
+    conn.close()
+
+    return [dict(row) for row in rows]
+
+@app.post("/batch-predict")
+async def batch_predict(file: UploadFile = File(...)):
+
+    contents = await file.read()
+
+    df = pd.read_csv(StringIO(contents.decode("utf-8")))
+
+    # Chuẩn hóa
+    X = scaler.transform(df)
+
+    # Dự đoán
+    prediction = model.predict(X)
+
+    probability = model.predict_proba(X)
+
+    df["prediction"] = label_encoder.inverse_transform(prediction)
+
+    df["confidence"] = np.max(probability, axis=1)
+
+    return df.to_dict(orient="records")
