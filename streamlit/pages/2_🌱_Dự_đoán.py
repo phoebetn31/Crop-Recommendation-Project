@@ -1,8 +1,10 @@
 import streamlit as st
 import requests
+import os
 
 st.set_page_config(
-    page_title="Dự đoán",
+    page_title="Crop Recommendation",
+    page_icon="streamlit/assets/logo.png",
     layout="wide"
 )
 
@@ -13,6 +15,7 @@ with open("style.css", encoding="utf-8") as f:
         unsafe_allow_html=True
     )
 
+# Header hệ thống
 st.markdown("""
 <div class="header">
     <div class="logo">
@@ -21,130 +24,118 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+# Tiêu đề trang
 st.markdown("""
 <div class="big-title">
-    DỰ ĐOÁN CÂY TRỒNG
+    DỰ ĐOÁN CÂY TRỒNG PHÙ HỢP
 </div>
 <div class="description">
-    Nhập thông tin đất và điều kiện môi trường để hệ thống đưa ra loại cây trồng phù hợp.
+    Nhập các chỉ số môi trường và đất đai dưới đây để mô hình AI (Random Forest) gợi ý loại cây trồng tối ưu nhất.
 </div>
 """, unsafe_allow_html=True)
 
-left, right = st.columns([1.2, 1], gap="large")
+# -------------------------------------------------------------
+# GIAO DIỆN NHẬP CHỈ SỐ (Chia làm 2 cột chính)
+# -------------------------------------------------------------
+st.markdown('<div class="content-card" style="margin-bottom: 25px;">', unsafe_allow_html=True)
+st.markdown('<h2 style="color:#2E7D32; font-size: 22px; margin-bottom: 20px;">📊 Nhập thông số môi trường</h2>', unsafe_allow_html=True)
 
-with left:
-    # Mở Card "Thông tin đầu vào"
-    st.markdown("""
-<div class="content-card">
-    <h2 style="color:#4CAF50; margin-bottom: 20px;">🌱 Thông tin đầu vào</h2>
-    """, unsafe_allow_html=True)
+col1, col2 = st.columns(2, gap="large")
 
-    # BƯỚC 3.10 — Chia Form nhập liệu thành 2 cột nhỏ phía trong Card
-    col1, col2 = st.columns(2, gap="medium")
+with col1:
+    st.markdown("##### 🧪 Thành phân dinh dưỡng trong đất")
+    n = st.number_input("N (Nitơ) - Hàm lượng đạm trong đất", min_value=0.0, max_value=150.0, value=50.0, step=1.0)
+    p = st.number_input("P (Phốt pho) - Hàm lượng lân trong đất", min_value=0.0, max_value=150.0, value=50.0, step=1.0)
+    k = st.number_input("K (Kali) - Hàm lượng kali trong đất", min_value=0.0, max_value=255.0, value=50.0, step=1.0)
+    ph = st.number_input("pH - Độ chua/kiềm của đất (0-14)", min_value=0.0, max_value=14.0, value=6.5, step=0.1)
 
-    with col1:
-        N = st.number_input("Nitơ (N)", value=0.0)
-        P = st.number_input("Photpho (P)", value=0.0)
-        K = st.number_input("Kali (K)", value=0.0)
-        temperature = st.number_input("Nhiệt độ (°C)", value=0.0)
+with col2:
+    st.markdown("##### 🌦️ Điều kiện khí hậu thời tiết")
+    temp = st.number_input("Nhiệt độ (°C)", min_value=0.0, max_value=50.0, value=25.0, step=0.5)
+    hum = st.number_input("Độ ẩm không khí (%)", min_value=0.0, max_value=100.0, value=70.0, step=1.0)
+    rain = st.number_input("Lượng mưa trung bình (mm)", min_value=0.0, max_value=300.0, value=100.0, step=5.0)
 
-    with col2:
-        humidity = st.number_input("Độ ẩm (%)", value=0.0)
-        ph = st.number_input("Độ pH", value=0.0)
-        rainfall = st.number_input("Lượng mưa (mm)", value=0.0)
-        
-        # Thêm một khoảng trống nhỏ bằng HTML để nút bấm cân đối với cột 1
-        st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
-    
-    # Nút dự đoán đặt ở cuối Card
-    predict_btn = st.button("🌱 Dự đoán")
+st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
+predict_btn = st.button("🚀 Bắt đầu phân tích & dự đoán")
+st.markdown('</div>', unsafe_allow_html=True)
 
-    # Đóng Card "Thông tin đầu vào"
-    st.markdown("</div>", unsafe_allow_html=True)
-
-with right:
-    # Mở Card "Kết quả dự đoán"
-    st.markdown("""
-<div class="content-card">
-    <h2 style="color:#4CAF50; margin-bottom: 20px;">📊 Kết quả dự đoán</h2>
-    """, unsafe_allow_html=True)
-
-    # Box trống để chứa kết quả hiển thị động
-    result_box = st.empty()
-
-    # Trạng thái ban đầu khi chưa bấm nút để card không bị trống trải
-    result_box.markdown("""
-    <div style="text-align:center; padding:80px 0; color:#A0AEC0;">
-        <div style="font-size:60px; margin-bottom: 15px;">📋</div>
-        Vui lòng nhập thông tin bên trái và nhấn nút "Dự đoán"
-    </div>
-    """, unsafe_allow_html=True)
-
-    # Đóng Card "Kết quả dự đoán"
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# BƯỚC 3.12 — Từ điển ánh xạ ảnh đúng loại cây trồng
-crop_images = {
-    "rice": "streamlit/assets/crops/rice.png",
-    "banana": "streamlit/assets/crops/banana.png",
-    "maize": "streamlit/assets/crops/maize.png",
-    "coffee": "streamlit/assets/crops/coffee.png",
-    "cotton": "streamlit/assets/crops/cotton.png",
-    "apple": "streamlit/assets/crops/apple.png",
-    "orange": "streamlit/assets/crops/orange.png",
-    "mango": "streamlit/assets/crops/mango.png"
-}
-
-# Xử lý sự kiện bấm nút
+# -------------------------------------------------------------
+# XỬ LÝ DỰ ĐOÁN KHI BẤM NÚT
+# -------------------------------------------------------------
 if predict_btn:
-    data = {
-        "N": N,
-        "P": P,
-        "K": K,
-        "temperature": temperature,
-        "humidity": humidity,
+    # 1. Tạo payload gửi lên FastAPI
+    payload = {
+        "N": n,
+        "P": p,
+        "K": k,
+        "temperature": temp,
+        "humidity": hum,
         "ph": ph,
-        "rainfall": rainfall
+        "rainfall": rain
     }
-
-    try:
-        response = requests.post(
-            "http://127.0.0.1:8000/predict",
-            json=data
-        )
-
-        if response.status_code == 200:
-            result = response.json()
-            crop = result["prediction"]
-
-            # Lấy ảnh tương ứng (mặc định là ảnh rice nếu không tìm thấy cây trùng khớp)
-            image_path = crop_images.get(crop.lower(), "streamlit/assets/crops/rice.png")
-
-            # Tạo một container bên trong result_box để chứa nhiều element liên tiếp chuẩn Canva
-            with result_box.container():
-                st.markdown("<div style='text-align:center; padding-top:10px;'>", unsafe_allow_html=True)
+    
+    with st.spinner("🧠 Hệ thống đang phân tích dữ liệu..."):
+        try:
+            # 2. Gọi API FastAPI thực hiện dự đoán
+            response = requests.post("http://127.0.0.1:8000/predict", json=payload, timeout=5)
+            
+            if response.status_code == 200:
+                result = response.json()
+                crop_prediction = result.get("prediction", "Unknown").strip()
                 
-                # BƯỚC 3.13 — Thay kết quả cũ bằng st.image và Tên cây trồng
-                st.image(image_path, width=250)
-                st.markdown(f"<h1 style='text-align:center; color:#4CAF50 !important; margin-top:15px;'>{crop.upper()}</h1>", unsafe_allow_html=True)
-                st.markdown("<p style='text-align:center; color:#A0AEC0; font-size:16px;'>Cây trồng được đề xuất tốt nhất</p>", unsafe_allow_html=True)
+                # Hiển thị kết quả dự đoán
+                st.markdown('<div class="content-card" style="border: 2px solid #2E7D32;">', unsafe_allow_html=True)
                 
-                st.markdown("<hr style='border-color: #2D3748; margin: 20px 0;'>", unsafe_allow_html=True)
+                res_col1, res_col2 = st.columns([1, 1], gap="large")
                 
-                # BƯỚC 3.14 — Thêm Progress Bar hiển thị độ tin cậy
-                st.write("### Độ tin cậy")
-                st.progress(99)
-                st.write("**99%**")
+                with res_col1:
+                    st.markdown(f"""
+                        <h3 style="color: #2E7D32; margin-top: 10px;">🎉 KẾT QUẢ ĐỀ XUẤT</h3>
+                        <p style="font-size: 16px;">Dựa trên phân tích mẫu đất và khí hậu, loại cây trồng phù hợp nhất cho mảnh ruộng của bạn là:</p>
+                        <div style="background-color: #DCFCE7; border-left: 5px solid #2E7D32; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                            <span style="color: #1B5E20; font-size: 32px; font-weight: 800; text-transform: uppercase;">
+                                {crop_prediction}
+                            </span>
+                        </div>
+                        <p style="font-size: 14px; color: #555;">💡 <i>Hệ thống khuyến nghị hãy đảm bảo nguồn nước tưới tiêu và quy trình chăm bón tiêu chuẩn để đạt năng suất tối đa.</i></p>
+                    """, unsafe_allow_html=True)
+                    
+                with res_col2:
+                    # -------------------------------------------------------------
+                    # TỰ ĐỘNG DÒ ĐƯỜNG DẪN TUYỆT ĐỐI KHÔNG SỢ LỖI THƯ MỤC CHẠY
+                    # -------------------------------------------------------------
+                    # Lấy vị trí của chính file code hiện tại (thư mục pages/)
+                    current_dir = os.path.dirname(os.path.abspath(__file__))
+                    # Đi ngược lên 1 cấp để vào thư mục streamlit/
+                    streamlit_dir = os.path.dirname(current_dir)
+                    
+                    # Ghép nối đường dẫn tuyệt đối đến ảnh cây trồng
+                    crop_filename = f"{crop_prediction.lower()}.png"
+                    image_path = os.path.join(streamlit_dir, "assets", "crops", crop_filename)
+                    
+                    # Ảnh logo mặc định đề phòng bạn chưa tải đủ 22 ảnh
+                    default_image = os.path.join(streamlit_dir, "assets", "logo.png")
+                    
+                    # Kiểm tra xem file ảnh có tồn tại không
+                    if os.path.exists(image_path):
+                        final_image_path = image_path
+                    else:
+                        final_image_path = default_image
+                    
+                    # Hiển thị ảnh cây trồng bo góc tuyệt đẹp
+                    st.image(
+                        final_image_path, 
+                        caption=f"Hình ảnh cây trồng: {crop_prediction.upper()}", 
+                        use_container_width=True
+                    )
                 
-                # BƯỚC 3.15 — Thêm ghi chú thông tin mô hình
-                st.info("Mô hình Random Forest đề xuất đây là loại cây có khả năng phù hợp nhất với điều kiện hiện tại.")
+                st.markdown('</div>', unsafe_allow_html=True)
+                st.balloons()  # Hiệu ứng bóng bay chúc mừng thành công
                 
-                st.markdown("</div>", unsafe_allow_html=True)
-        else:
-            result_box.error("API trả về lỗi hoặc không phản hồi dữ liệu.")
-
-    except requests.exceptions.ConnectionError:
-        result_box.error("Không thể kết nối tới FastAPI Server (Hãy chắc chắn bạn đã bật backend ở port 8000).")
+            else:
+                st.error(f"❌ Lỗi từ server FastAPI (Mã lỗi: {response.status_code})")
+        except Exception as e:
+            st.error(f"❌ Lỗi kết nối đến Backend FastAPI: {e}")
 
 # Footer chân trang ở cuối cùng
 st.markdown("---")
