@@ -1,0 +1,234 @@
+/* ========================================= */
+/* 1. IMPORT FONT & CHỦ ĐẠO LIGHT MODE       */
+/* ========================================= */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+html, body, [class*="css"], .stApp {
+    font-family: 'Poppins', sans-serif;
+    background: #F8FAFC !important;
+}
+
+/* ========================================= */
+/* 2. SIDEBAR ĐẸP HƠN (BƯỚC 7.1)             */
+/* ========================================= */
+section[data-testid="stSidebar"] {
+    background: #FFFFFF !important;
+    border-right: 1px solid #E5E7EB !important;
+    padding-top: 20px;
+}
+
+section[data-testid="stSidebar"] .stRadio label {
+    font-size: 16px;
+    font-weight: 500;
+    color: #1E293B !important;
+}
+
+/* ========================================= */
+/* 3. HEADER & TIÊU ĐỀ                       */
+/* ========================================= */
+.header {
+    background: white;
+    border-radius: 22px;
+    padding: 22px 35px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.04);
+    margin-bottom: 35px;
+}
+
+.logo {
+    color: #2E7D32 !important;
+    font-size: 34px;
+    font-weight: 700;
+}
+
+.logo span {
+    color: #1E293B !important;
+}
+
+.big-title {
+    text-align: center;
+    font-size: 48px;
+    font-weight: 700;
+    color: #1E293B !important;
+    margin-top: 15px;
+    margin-bottom: 8px;
+}
+
+.description {
+    width: 70%;
+    margin: auto;
+    text-align: center;
+    color: #64748B !important;
+    font-size: 20px;
+    line-height: 1.8;
+    margin-bottom: 35px;
+}
+
+/* ========================================= */
+/* 4. NÂNG CẤP CARD & HOVER EFFECTS (BƯỚC 7.2)*/
+/* ========================================= */
+.stat-card, .content-card {
+    background: white !important;
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 10px 25px rgba(0,0,0,.03);
+    border: 1px solid #E2E8F0;
+    transition: all 0.25s ease-in-out;
+}
+
+.stat-card {
+    height: 170px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.stat-card:hover, .content-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0,0,0,.12) !important;
+}
+
+/* Các vòng tròn bao quanh icon */
+.stat-icon {
+    font-size: 24px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+}
+
+.col-1 .stat-icon { background: #E0F2FE; color: #0284C7; }
+.col-2 .stat-icon { background: #FEF3C7; color: #D97706; }
+.col-3 .stat-icon { background: #DCFCE7; color: #16A34A; }
+.col-4 .stat-icon { background: #FCE7F3; color: #DB2777; }
+
+.stat-title {
+    color: #64748B !important;
+    font-size: 15px;
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.stat-value {
+    color: #1E293B !important;
+    font-size: 26px;
+    font-weight: 700;
+}
+
+.content-card h2 {
+    color: #2E7D32 !important;
+    font-weight: 700;
+}
+
+.content-card p, .content-card li {
+    color: #334155 !important;
+    font-weight: 500;
+}
+
+.content-card pre {
+    background: #F1F5F9 !important;
+    color: #0F172A !important;
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid #E2E8F0;
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: bold;
+}
+
+/* ========================================= */
+/* 5. INPUTS & TEXT AREAS ĐẸP HƠN (BƯỚC 7.3) */
+/* ========================================= */
+.stNumberInput input, .stTextInput input {
+    border-radius: 12px !important;
+    border: 1px solid #D1D5DB !important;
+    color: #1E293B !important;
+    background-color: #FFFFFF !important;
+}
+
+.stWidgetLabel p, label {
+    color: #334155 !important;
+    font-weight: 600 !important;
+}
+
+/* ========================================= */
+/* 6. NÚT BẤM CHUẨN ĐÉT CANVA (BƯỚC 7.4)     */
+/* ========================================= */
+.stButton>button {
+    width: 100% !important;
+    background: #2E7D32 !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 15px !important;
+    padding: 14px !important;
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    transition: all 0.25s ease-in-out !important;
+}
+
+.stButton>button:hover {
+    background: #1B5E20 !important;
+    transform: scale(1.02) !important;
+    color: white !important;
+}
+
+/* ========================================= */
+/* 7. BẢNG DỮ LIỆU & FILE UPLOADER & PROGRESS*/
+/* ========================================= */
+/* Bo góc bảng (Bước 7.5) */
+[data-testid="stDataFrame"] {
+    border-radius: 18px !important;
+    overflow: hidden !important;
+    border: 1px solid #E5E7EB !important;
+}
+
+/* Khung File Uploader nét đứt (Bước 7.6) */
+[data-testid="stFileUploader"] {
+    border: 2px dashed #2E7D32 !important;
+    border-radius: 20px !important;
+    padding: 15px !important;
+    background-color: #FFFFFF !important;
+}
+
+/* Màu thanh Progress bar xanh lá (Bước 7.7) */
+.stProgress>div>div>div>div {
+    background-color: #43A047 !important;
+}
+
+/* ========================================= */
+/* 8. THANH CUỘN SCROLLBAR (BƯỚC 7.8)        */
+/* ========================================= */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #BDBDBD !important;
+    border-radius: 20px !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #9E9E9E !important;
+}
+
+img {
+    border-radius: 18px;
+}
+
+/* Nút xóa lịch sử màu đỏ cam nổi bật */
+.stButton button[aria-label="🗑️ Xóa lịch sử"] {
+    background-color: #EF4444 !important; /* Màu đỏ */
+    color: white !important;
+}
+
+.stButton button[aria-label="🗑️ Xóa lịch sử"]:hover {
+    background-color: #DC2626 !important; /* Đỏ đậm hơn khi hover */
+}
+
+/* Ẩn liên kết đến file chính (app.py) trên Sidebar */
+[data-testid="stSidebarNav"] li:first-child {
+    display: none !important;
+}
