@@ -1,4 +1,4 @@
-#thêm các thư viện cần thiết
+# thêm các thư viện cần thiết
 from fastapi import FastAPI, UploadFile, File
 from pydantic import BaseModel
 import pandas as pd
@@ -7,9 +7,9 @@ import sqlite3
 from io import StringIO
 import numpy as np  
 import os
-import sqlite3
+from pathlib import Path
 
-#tạo một app API
+# tạo một app API
 app = FastAPI(
     title="Crop Recommendation API",
     description="API dự đoán cây trồng bằng Random Forest",
@@ -23,9 +23,13 @@ model = joblib.load("models/crop_model.pkl")
 label_encoder = joblib.load("models/label_encoder.pkl")
 scaler = joblib.load("models/scaler.pkl")
 
+# Định nghĩa đường dẫn tuyệt đối chuẩn xác ngay từ đầu
+BASE_DIR = Path(__file__).resolve().parent.parent
+DB_PATH = BASE_DIR / "database" / "crop_prediction.db"
+
 # Kết nối SQLite
 def get_connection():
-    conn = sqlite3.connect("database/crop_prediction.db")
+    conn = sqlite3.connect(str(DB_PATH))
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -81,26 +85,15 @@ def predict(data: CropInput):
         "rainfall": data.rainfall
     }])
 
-    # Chuẩn hóa dữ liệu
-    #input_scaled = scaler.transform(input_data)
-
-    # Dự đoán
-    #prediction = model.predict(input_scaled)
-
-    # Xác suất dự đoán
-    #probability = model.predict_proba(input_scaled)
-
+    # Dự đoán trực tiếp không qua scaler để đồng bộ
     prediction = model.predict(input_data)
-
     probability = model.predict_proba(input_data)
 
     crop = label_encoder.inverse_transform(prediction)[0]
-
     confidence = float(probability.max())
 
     # Lưu vào SQLite
     conn = get_connection()
-
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -142,7 +135,6 @@ def predict(data: CropInput):
 def history(limit: int = 10):
 
     conn = get_connection()
-
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -153,7 +145,6 @@ def history(limit: int = 10):
     """, (limit,))
 
     rows = cursor.fetchall()
-
     conn.close()
 
     return [dict(row) for row in rows]
@@ -162,41 +153,31 @@ def history(limit: int = 10):
 async def batch_predict(file: UploadFile = File(...)):
 
     contents = await file.read()
-
     df = pd.read_csv(StringIO(contents.decode("utf-8")))
 
-    # Chuẩn hóa
-    X = scaler.transform(df)
-
-    # Dự đoán
-    prediction = model.predict(X)
-
-    probability = model.predict_proba(X)
+    # Dự đoán trực tiếp không qua scaler để đồng bộ với endpoint đơn lẻ
+    prediction = model.predict(df)
+    probability = model.predict_proba(df)
 
     df["prediction"] = label_encoder.inverse_transform(prediction)
-
     df["confidence"] = np.max(probability, axis=1)
 
     return df.to_dict(orient="records")
 
-# Đảm bảo đường dẫn tuyệt đối chuẩn xác đập thẳng từ thư mục gốc của dự án
-PROJECT_ROOT = "D:\\Crop-Recommendation-Project"
-DB_PATH = os.path.join(PROJECT_ROOT, "database", "crop_prediction.db")
-
 @app.delete("/history")
 def clear_history():
     try:
-        # 1. Kết nối đúng file database
-        conn = sqlite3.connect(DB_PATH)
+        # 1. Kết nối đúng file database (sử dụng str)
+        conn = sqlite3.connect(str(DB_PATH))
         cursor = conn.cursor()
         
-        # 2. Tự động tìm tên bảng thực tế đang lưu lịch sử dự đoán để tránh ghi sai tên bảng
+        # 2. Tự động tìm tên bảng thực tế đang lưu lịch sử dự đoán
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
         tables = [row[0] for row in cursor.fetchall()]
         
         # Tìm xem trong các bảng có bảng nào tên là 'predictions', 'prediction', 'history' hoặc tương tự không
         target_table = None
-        for t in ["predictions", "prediction", "history", "crop_predictions"]:
+        for t in ["predictions", "prediction", "history", "crop_predictions", "prediction_history"]:
             if t in tables:
                 target_table = t
                 break

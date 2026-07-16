@@ -1,15 +1,24 @@
 import streamlit as st
+from pathlib import Path
+import os
+
+# -------------------------------------------------------------
+# ĐỊNH NGHĨA ĐƯỜNG DẪN GỐC (BASE_DIR) TRƯỚC TIÊN
+# -------------------------------------------------------------
+BASE_DIR = Path(__file__).resolve().parent.parent
+LOGO = BASE_DIR / "assets" / "logo.png"
+CSS_PATH = BASE_DIR / "style.css"
 
 st.set_page_config(
     page_title="Trang chủ",
+    page_icon=str(LOGO) if LOGO.exists() else None,  # Đồng bộ icon tiêu đề trang
     layout="wide"
 )
 
-with open("style.css", encoding="utf-8") as f:
-    st.markdown(
-        f"<style>{f.read()}</style>",
-        unsafe_allow_html=True
-    )
+# Đọc file CSS
+if CSS_PATH.exists():
+    with open(CSS_PATH, encoding="utf-8") as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 st.markdown("""
 <div class="header">
@@ -94,8 +103,11 @@ with right:
     # Mở khối div làm khung card
     st.markdown('<div class="content-card">', unsafe_allow_html=True)
     
-    # Hiển thị ảnh bằng hàm chuẩn của streamlit (lùi ra 1 cấp thư mục để vào assets)
-    st.image("../streamlit/assets/dashboard.jpg", use_container_width=True)
+    # Sử dụng đường dẫn tuyệt đối đã sửa để tránh lỗi Docker
+    st.image(
+        str(LOGO),
+        use_container_width=True
+    ) 
     
     # Đóng khối div lại
     st.markdown('</div>', unsafe_allow_html=True)

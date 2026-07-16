@@ -1,18 +1,26 @@
 import streamlit as st
+from pathlib import Path
 
+# -------------------------------------------------------------
+# ĐỊNH NGHĨA ĐƯỜNG DẪN GỐC (BASE_DIR) TRƯỚC TIÊN
+# -------------------------------------------------------------
+BASE_DIR = Path(__file__).resolve().parent.parent
+LOGO = BASE_DIR / "assets" / "logo.png"
+CSS_PATH = BASE_DIR / "style.css"
+
+# Cấu hình trang sử dụng đường dẫn logo chuẩn xác tuyệt đối để đồng bộ icon
 st.set_page_config(
     page_title="Thông tin mô hình",
+    page_icon=str(LOGO) if LOGO.exists() else None,
     layout="wide"
 )
 
-# Sửa lỗi giải mã mã hóa ký tự trên Windows
-with open("style.css", encoding="utf-8") as f:
-    st.markdown(
-        f"<style>{f.read()}</style>",
-        unsafe_allow_html=True
-    )
+# Đọc file CSS
+if CSS_PATH.exists():
+    with open(CSS_PATH, encoding="utf-8") as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-# BƯỚC 4.2 — Header
+# Header hệ thống
 st.markdown("""
 <div class="header">
     <div class="logo">
@@ -21,7 +29,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# BƯỚC 4.3 — Tiêu đề
+# Tiêu đề trang
 st.markdown("""
 <div class="big-title">
     THÔNG TIN MÔ HÌNH
@@ -31,8 +39,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# BƯỚC 4.4 — 4 Card thông tin số liệu phía trên
-# BƯỚC 4.4 — Thay đổi một chút class để nhận diện vòng tròn màu
+# 4 Card thông tin số liệu phía trên
 col1, col2, col3, col4 = st.columns(4, gap="medium")
 
 with col1:
@@ -47,11 +54,11 @@ with col3:
 with col4:
     st.markdown('<div class="col-4"><div class="stat-card"><div class="stat-icon">📊</div><div class="stat-title">Đặc trưng</div><div class="stat-value">7</div></div></div>', unsafe_allow_html=True)
 
-# BƯỚC 4.5 — Tạo khoảng trống và chia 2 khung bên dưới
+# Tạo khoảng trống và chia 2 khung bên dưới
 st.markdown("<br>", unsafe_allow_html=True)
 left, right = st.columns([1, 1], gap="large")
 
-# BƯỚC 4.6 — Khung bên trái (Đặc trưng đầu vào)
+# Khung bên trái (Đặc trưng đầu vào)
 with left:
     st.markdown("""
 <div class="content-card">
@@ -68,7 +75,7 @@ with left:
 </div>
     """, unsafe_allow_html=True)
 
-# BƯỚC 4.7 — Khung bên phải (Thông tin API & Metrics)
+# Khung bên phải (Thông tin API & Metrics)
 with right:
     st.markdown("""
 <div class="content-card">

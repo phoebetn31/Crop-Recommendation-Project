@@ -1,19 +1,26 @@
 import streamlit as st
 import pandas as pd
 import requests
+from pathlib import Path
 
+# -------------------------------------------------------------
+# ĐỊNH NGHĨA ĐƯỜNG DẪN GỐC (BASE_DIR) TRƯỚC TIÊN
+# -------------------------------------------------------------
+BASE_DIR = Path(__file__).resolve().parent.parent
+LOGO = BASE_DIR / "assets" / "logo.png"
+CSS_PATH = BASE_DIR / "style.css"
+
+# Cấu hình trang sử dụng đường dẫn logo chuẩn xác tuyệt đối
 st.set_page_config(
     page_title="Crop Recommendation",
-    page_icon="streamlit/assets/logo.png",
+    page_icon=str(LOGO) if LOGO.exists() else None,
     layout="wide"
 )
 
-# Sửa lỗi encoding khi đọc file CSS trên Windows
-with open("style.css", encoding="utf-8") as f:
-    st.markdown(
-        f"<style>{f.read()}</style>",
-        unsafe_allow_html=True
-    )
+# Đọc file CSS
+if CSS_PATH.exists():
+    with open(CSS_PATH, encoding="utf-8") as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 # Header hệ thống
 st.markdown("""
@@ -43,7 +50,7 @@ if "history_df" not in st.session_state:
 # -------------------------------------------------------------
 def fetch_data():
     try:
-        response = requests.get("http://127.0.0.1:8000/history", timeout=5)
+        response = requests.get("http://api:8000/history", timeout=5)
         if response.status_code == 200:
             history = response.json()
             return pd.DataFrame(history)
@@ -84,7 +91,7 @@ st.markdown('</div>', unsafe_allow_html=True)
 if clear_btn:
     try:
         # Gửi request DELETE tới backend
-        delete_response = requests.delete("http://127.0.0.1:8000/history", timeout=5)
+        delete_response = requests.delete("http://api:8000/history", timeout=5)
         
         # Nếu Backend xoá thành công hoặc phản hồi tốt
         if delete_response.status_code == 200:
