@@ -4,6 +4,12 @@ import os
 from pathlib import Path
 
 # -------------------------------------------------------------
+# CẤU HÌNH BIẾN MÔI TRƯỜNG API (Local vs Docker)
+# -------------------------------------------------------------
+# Tự động lấy URL từ biến môi trường (Docker), nếu không có mặc định dùng localhost (Local)
+API_URL = os.getenv("API_URL", "http://127.0.0.1:8000")
+
+# -------------------------------------------------------------
 # ĐỊNH NGHĨA ĐƯỜNG DẪN GỐC (BASE_DIR) TRƯỚC TIÊN
 # -------------------------------------------------------------
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -83,8 +89,8 @@ if predict_btn:
     
     with st.spinner("🧠 Hệ thống đang phân tích dữ liệu..."):
         try:
-            # 2. Gọi API FastAPI thực hiện dự đoán (Giữ nguyên URL Docker Network)
-            response = requests.post("http://api:8000/predict", json=payload, timeout=5)
+            # 2. Gọi API FastAPI bằng biến môi trường linh hoạt
+            response = requests.post(f"{API_URL}/predict", json=payload, timeout=5)
             
             if response.status_code == 200:
                 result = response.json()
@@ -150,6 +156,6 @@ if predict_btn:
 st.markdown("---")
 st.markdown("""
 <div style='text-align:center; color:#888; padding:10px; font-weight:500;'>
-    © 2026 Crop Recommendation System | Developed using Random Forest, FastAPI & Streamlit
+    © 2026 Crop Recommendatio n System | Developed using Random Forest, FastAPI & Streamlit
 </div>
 """, unsafe_allow_html=True)

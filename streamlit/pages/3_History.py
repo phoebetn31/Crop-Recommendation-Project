@@ -1,7 +1,14 @@
 import streamlit as st
 import pandas as pd
 import requests
+import os
 from pathlib import Path
+
+# -------------------------------------------------------------
+# CẤU HÌNH BIẾN MÔI TRƯỜNG API (Local vs Docker)
+# -------------------------------------------------------------
+# Tự động lấy URL từ biến môi trường (Docker), nếu không có mặc định dùng localhost (Local)
+API_URL = os.getenv("API_URL", "http://127.0.0.1:8000")
 
 # -------------------------------------------------------------
 # ĐỊNH NGHĨA ĐƯỜNG DẪN GỐC (BASE_DIR) TRƯỚC TIÊN
@@ -50,7 +57,8 @@ if "history_df" not in st.session_state:
 # -------------------------------------------------------------
 def fetch_data():
     try:
-        response = requests.get("http://api:8000/history", timeout=5)
+        # Gọi API lấy lịch sử thông qua biến môi trường API_URL linh hoạt
+        response = requests.get(f"{API_URL}/history", timeout=5)
         if response.status_code == 200:
             history = response.json()
             return pd.DataFrame(history)
@@ -90,8 +98,8 @@ st.markdown('</div>', unsafe_allow_html=True)
 # -------------------------------------------------------------
 if clear_btn:
     try:
-        # Gửi request DELETE tới backend
-        delete_response = requests.delete("http://api:8000/history", timeout=5)
+        # Gửi request DELETE tới backend bằng biến môi trường API_URL linh hoạt
+        delete_response = requests.delete(f"{API_URL}/history", timeout=5)
         
         # Nếu Backend xoá thành công hoặc phản hồi tốt
         if delete_response.status_code == 200:

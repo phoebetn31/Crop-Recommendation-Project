@@ -1,7 +1,14 @@
 import streamlit as st
 import pandas as pd
 import requests
+import os
 from pathlib import Path
+
+# -------------------------------------------------------------
+# CẤU HÌNH BIẾN MÔI TRƯỜNG API (Local vs Docker)
+# -------------------------------------------------------------
+# Tự động lấy URL từ biến môi trường (Docker), nếu không có mặc định dùng localhost (Local)
+API_URL = os.getenv("API_URL", "http://127.0.0.1:8000")
 
 # -------------------------------------------------------------
 # ĐỊNH NGHĨA ĐƯỜNG DẪN GỐC (BASE_DIR) TRƯỚC TIÊN
@@ -83,8 +90,9 @@ if uploaded_file:
                 status_text.text(f"⏳ Đang xử lý mẫu số {index + 1}/{total_rows}...")
                 progress_bar.progress(int((index + 1) / total_rows * 100))
                 
+                # Gọi API thông qua biến môi trường API_URL linh hoạt
                 response = requests.post(
-                    "http://api:8000/predict",
+                    f"{API_URL}/predict",
                     json={
                         "N": float(row["N"]),
                         "P": float(row["P"]),
