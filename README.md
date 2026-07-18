@@ -32,7 +32,7 @@ khoa.vv@ou.edu.vn
 ### Commit dùng để chấm
 
 Tag: nop-BTL
-Commit: <commit_hash>
+Commit: ef4c15712edf1dfd432a9cb5349b7e829e84966bS
 
 ---
 
