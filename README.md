@@ -40,7 +40,7 @@ Commit: ef4c15712edf1dfd432a9cb5349b7e829e84966bS
 
 **Link video:**
 
-<LINK_VIDEO>
+https://youtu.be/pa7BfAQApuE?si=xp6qiuzzQl6tYVN9
 
 Video gồm các nội dung:
 
